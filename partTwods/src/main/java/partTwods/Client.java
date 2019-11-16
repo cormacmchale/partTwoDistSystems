@@ -1,38 +1,35 @@
 package partTwods;
 
-import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
-
-import com.google.j2objc.annotations.ReflectionSupport.Level;
+//import java.util.logging.Logger;
 import com.google.protobuf.BoolValue;
 import com.google.protobuf.ByteString;
-
 import ie.gmit.ds.HashRequest;
 import ie.gmit.ds.HashResponse;
 import ie.gmit.ds.PasswordServiceGrpc;
+import ie.gmit.ds.ValidatorRequest;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 public class Client {
-	
-	//save hashRequest results for request for validation
-	private ByteString hashedPassword;
-	private ByteString salt;
-	
+		
 	//initialize applicable fields
-    private static final Logger logger = Logger.getLogger(Client.class.getName());  
+    //private static final Logger logger = Logger.getLogger(Client.class.getName());  
     private final ManagedChannel channel;
     private final PasswordServiceGrpc.PasswordServiceStub asyncPasswordService;
     private final PasswordServiceGrpc.PasswordServiceBlockingStub syncPasswordService;
 
     public Client(String host, int port) {
+    	
+    	//try/catch??
         channel = ManagedChannelBuilder
         		.forAddress(host, port)
                 .usePlaintext()
                 .build();
+        
+        
         syncPasswordService = PasswordServiceGrpc.newBlockingStub(channel);
         asyncPasswordService = PasswordServiceGrpc.newStub(channel);
     }
@@ -59,11 +56,11 @@ public class Client {
 					}
 					@Override
 					public void onNext(HashResponse passwordAndHash) {
-						//users.put(newUser.getUserId(), new UserObject(newUser.getUserId(), newUser.getUserName(), newUser.getEmail(), newUser.getPassword(),
-																//passwordAndHash.getHashedPassword(), passwordAndHash.getSalt()));
-						System.out.println(passwordAndHash.getHashedPassword().toString());
-						System.out.println(passwordAndHash.getSalt().toString());
-						System.out.println("User added");
+						//add to the database here
+						PretendDatabase d = PretendDatabase.getInstance();
+						UserObject user = new UserObject(newUser.getUserId(), newUser.getUserName(), newUser.getEmail(), newUser.getPassword(),
+														 passwordAndHash.getHashedPassword(), passwordAndHash.getSalt());
+						d.addUser(user);
 					}
     			};
     		try 
@@ -75,57 +72,27 @@ public class Client {
     	    }
         	catch (StatusRuntimeException ex)
     		{
-        		
-    		}   
     		    //not working for the moment
-        		//logger.log(Level.NATIVE_ONLY,"RPC failed: {0}", ex.getStatus());
+        		//logger.log(Level.NATIVE_ONLY,"RPC failed: {0}", ex.getStatus());       		
+    		}   
     	}   
     
     //async method to check password here
-    //public boolean asyncPasswordValidation(String p, ByteString hp, ByteString s)
-    //{
- 
-    //	StreamObserver<BoolValue> responseObserver = new StreamObserver<BoolValue>()
-    //	{
-	//		@Override
-	//		public void onNext(BoolValue value) {
-				// TODO Auto-generated method stub
-	//			if(value.getValue())
-	//			{
-	//				isCorrect = true;
-	//			}
-	//			else
-	//			{
-	//				isCorrect = false;
-	//			}
-				
-	//		}
-	//		@Override
-	//		public void onError(Throwable t) {
-				// TODO Auto-generated method stub
-				//dont care
-	//		}
+    public boolean syncPasswordValidation(LoginObject login, ByteString hp, ByteString s)
+    {
+    	ValidatorRequest request = ValidatorRequest.newBuilder().setPassword(login.getPassword()).setHashedPassword(hp).setSalt(s).build();
+    	BoolValue result = BoolValue.newBuilder().getDefaultInstanceForType();
+    	try
+    	 {
+    		 result = syncPasswordService.validate(request); 
+    		 System.out.println(result);
+    		 return result.getValue();
+    	 }
+         catch (StatusRuntimeException ex) 
+     	 {
+ 	       System.out.println(ex.getLocalizedMessage());
+ 	       return false;
+         }  	
+    }
 
-	//		@Override
-	//		public void onCompleted() {				
-	//			System.exit(0);
-	//		}   		
-    //	};   	
-     //   try {
-     //   	 asyncPasswordService.validate(ValidatorRequest.newBuilder().setPassword(p)
-     //       														   .setHashedPassword(hp)
-     //       														   .setSalt(s).build(), responseObserver);
-
-     //   	while(!isCorrect)
-      //  	{
-        		//wait until it has been changed 
-      //  	}
-      //    	return isCorrect;
-         
-     //   } catch (
-      //          StatusRuntimeException ex) {
-            //logger.log(Level.WARNING, "RPC failed: {0}", ex.getStatus());
-      //      return isCorrect;
-     //   }
-  ///  }
 }//end client

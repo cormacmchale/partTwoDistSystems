@@ -39,6 +39,7 @@ public class UserObject {
 	//No validation required
 	private ByteString hashedPassword;
 	private ByteString salt;
+	
 	 @JsonProperty
 	public ByteString getHashedPassword() {
 		return hashedPassword;

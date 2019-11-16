@@ -6,20 +6,14 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import com.google.protobuf.BoolValue;
-import com.google.protobuf.ByteString;
-import io.grpc.stub.StreamObserver;
 
 @Path("/user")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -28,11 +22,7 @@ public class UserAPI {
 	
 	//Client for password service
 	Client gRPCCalls = new Client("127.0.0.1", 40000);
-	
-	//Simulated Database
-	static HashMap<Integer, UserObject> users = new HashMap<>();	
-
-	
+		
 	//validator
 	private final Validator validator;
 
@@ -48,20 +38,104 @@ public class UserAPI {
 		Set<ConstraintViolation<UserObject>> violations = validator.validate(newUser);
 		if(violations.size()>0)
 		{
-			return Response.status(400).type(MediaType.TEXT_PLAIN).entity("Json failed Validation!").build();
+			return Response.status(400).type(MediaType.APPLICATION_JSON).entity(new UserResponse("Json failed Validation")).build();
 		}
 		else
 		{
 			//pass to async method
 			gRPCCalls.requestAHash(newUser);
-			return Response.status(200).build();
+			return Response.status(200).type(MediaType.APPLICATION_JSON).entity(new UserResponse("User Added Sucessfully")).build();
 		}
 		//call password service grpc
 	}
+	
+	@Path("/login")
+	@POST
+	public Response login(LoginObject login)
+	{
+		Set<ConstraintViolation<LoginObject>> violations = validator.validate(login);
+		if(violations.size()>0)
+		{
+			return Response.status(400).type(MediaType.APPLICATION_JSON).entity(new UserResponse("Json failed Validation")).build();
+		}
+		else
+		{
+			//get the database
+			PretendDatabase d = PretendDatabase.getInstance();
+			//make the call to service,pass it the specific user information
+			if(gRPCCalls.syncPasswordValidation(login, d.returnUser(login.getUserId()).getHashedPassword(), d.returnUser(login.getUserId()).getSalt()))
+			{
+				return Response.status(200).type(MediaType.APPLICATION_JSON).entity(new UserResponse("Login Sucess")).build();
+			}
+			else
+			{
+				return Response.status(400).type(MediaType.APPLICATION_JSON).entity(new UserResponse("Login Failed - Incorrect Password")).build();
+			}
+		}
+	}
+	
 	//return all users
 	@GET
 	public Collection<UserObject> getUsers() 
-	{	      	
-	   return users.values();
+	{	    
+	   PretendDatabase d = PretendDatabase.getInstance();
+	   return d.data();
 	}
+	
+	//return sepcific user
+	@Path("/{id}")	
+	@GET
+	public Response getUser(@PathParam("id") int id) 
+	{
+		  PretendDatabase d = PretendDatabase.getInstance();
+		  if(d.returnUser(id)==null)
+		  {
+			  return Response.status(404).type(MediaType.APPLICATION_JSON).entity(new UserResponse("User Not in database")).build(); 
+		  }
+		  else
+		  {
+			  //send the user in Json back 
+			  return Response.status(200).type(MediaType.APPLICATION_JSON).entity(d.returnUser(id)).build();
+		  }
+	}	
+	//alter the user
+	@Path("/{id}")	
+	@PUT
+	public Response alterUser(UserObject changeUser, @PathParam("id") int id)
+	{
+		PretendDatabase d = PretendDatabase.getInstance();
+		if(d.alterUser(id, changeUser))
+		{
+			return Response.status(200).type(MediaType.APPLICATION_JSON).entity(new UserResponse("User Changed")).build();	
+		}
+		else
+		{
+			return Response.status(404).type(MediaType.APPLICATION_JSON).entity(new UserResponse("User not in Database - please add a user before altering")).build();
+		}
+	}
+	//alter the user
+	@Path("/{id}")	
+	@DELETE
+	public Response deleteUser(@PathParam("id") int id)
+	{
+		PretendDatabase d = PretendDatabase.getInstance();
+		if(d.deleteUser(id))
+		{
+			return Response.status(200).type(MediaType.APPLICATION_JSON).entity(new UserResponse("User Deleted")).build();	
+		}
+		else
+		{
+			return Response.status(404).type(MediaType.APPLICATION_JSON).entity(new UserResponse("User not in Database - please add a user before deleting")).build();
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }
