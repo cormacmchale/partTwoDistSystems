@@ -16,23 +16,31 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Path("/user")
-@Consumes(MediaType.APPLICATION_JSON)
-@Produces(MediaType.APPLICATION_JSON)
+@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 public class UserAPI {
-	
-	//Client for password service
-	Client gRPCCalls = new Client("127.0.0.1", 40000);
-		
+
 	//validator
 	private final Validator validator;
+	private Client gRPCCalls;
 
 	//pass in validator for validating JSON
 	public UserAPI(Validator validator)
 	{
 	    this.validator = validator;
+		//Client for password service
+		try
+		{
+			gRPCCalls = new Client("127.0.0.1", 40000);
+		}
+		catch(Exception ex)
+		{
+			System.out.println(ex.getMessage());
+		}
 	}
 	//add a user - validate JSON
 	@POST
+	@Produces(MediaType.APPLICATION_XML)
 	public Response adduser(UserObject newUser)
 	{
 		Set<ConstraintViolation<UserObject>> violations = validator.validate(newUser);
@@ -72,8 +80,7 @@ public class UserAPI {
 				return Response.status(400).type(MediaType.APPLICATION_JSON).entity(new UserResponse("Login Failed - Incorrect Password")).build();
 			}
 		}
-	}
-	
+	}	
 	//return all users
 	@GET
 	public Collection<UserObject> getUsers() 
@@ -97,7 +104,7 @@ public class UserAPI {
 			  //send the user in Json back 
 			  return Response.status(200).type(MediaType.APPLICATION_JSON).entity(d.returnUser(id)).build();
 		  }
-	}	
+	}
 	//alter the user
 	@Path("/{id}")	
 	@PUT
@@ -127,15 +134,5 @@ public class UserAPI {
 		{
 			return Response.status(404).type(MediaType.APPLICATION_JSON).entity(new UserResponse("User not in Database - please add a user before deleting")).build();
 		}
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	}	
 }

@@ -23,13 +23,10 @@ public class Client {
 
     public Client(String host, int port) {
     	
-    	//try/catch??
         channel = ManagedChannelBuilder
         		.forAddress(host, port)
                 .usePlaintext()
-                .build();
-        
-        
+                .build();      
         syncPasswordService = PasswordServiceGrpc.newBlockingStub(channel);
         asyncPasswordService = PasswordServiceGrpc.newStub(channel);
     }
@@ -73,7 +70,7 @@ public class Client {
         	catch (StatusRuntimeException ex)
     		{
     		    //not working for the moment
-        		//logger.log(Level.NATIVE_ONLY,"RPC failed: {0}", ex.getStatus());       		
+        		System.out.println("here");     		
     		}   
     	}   
     
