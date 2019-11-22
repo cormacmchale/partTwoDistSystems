@@ -25,13 +25,13 @@ public class UserAPI {
 	private Client gRPCCalls;
 
 	//pass in validator for validating JSON
-	public UserAPI(Validator validator)
+	public UserAPI(Validator validator, String s, int p)
 	{
 	    this.validator = validator;
 		//Client for password service
 		try
 		{
-			gRPCCalls = new Client("127.0.0.1", 40000);
+			gRPCCalls = new Client(s, p);
 		}
 		catch(Exception ex)
 		{
@@ -64,7 +64,7 @@ public class UserAPI {
 		Set<ConstraintViolation<LoginObject>> violations = validator.validate(login);
 		if(violations.size()>0)
 		{
-			return Response.status(400).type(MediaType.APPLICATION_JSON).entity(new UserResponse("Json failed Validation")).build();
+			return Response.status(400).type(MediaType.APPLICATION_JSON).entity(new UserResponse("Validation Failed")).build();
 		}
 		else
 		{

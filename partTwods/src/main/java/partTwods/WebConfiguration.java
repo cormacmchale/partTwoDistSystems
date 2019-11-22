@@ -3,5 +3,13 @@ package partTwods;
 import io.dropwizard.Configuration;
 
 public class WebConfiguration extends Configuration {
-	//no extra config required
+	//config for service
+	private String hostService = "127.0.0.1";
+	private int hostPort = 40000;
+	public String getHostService() {
+		return hostService;
+	}
+	public int getHostPort() {
+		return hostPort;
+	}	
 }

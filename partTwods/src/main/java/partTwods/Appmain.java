@@ -10,6 +10,9 @@ public class Appmain extends Application<WebConfiguration> {
     }
 
     public void run(WebConfiguration webconfig, Environment environment) throws Exception {
-        environment.jersey().register(new UserAPI(environment.getValidator()));
+        environment.jersey().register(new UserAPI(environment.getValidator(), webconfig.getHostService(), webconfig.getHostPort()));
+        
+        AppHealthCheck healthCheck = new AppHealthCheck();
+        environment.healthChecks().register("Check", healthCheck);
     }
 }

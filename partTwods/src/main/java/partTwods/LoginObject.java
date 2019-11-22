@@ -32,5 +32,13 @@ public class LoginObject {
 	public String getPassword() {
 		return password;
 	}
+	//needed for xml
+	public void setUserId(int userId) {
+		this.userId = userId;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
 		
 }

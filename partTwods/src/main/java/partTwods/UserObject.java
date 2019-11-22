@@ -73,7 +73,7 @@ public class UserObject {
 		return password;
 	}
 	
-	//needed for xml?
+	//needed for xml
 	public void setUserId(int userId) {
 		this.userId = userId;
 	}
