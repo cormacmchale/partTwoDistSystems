@@ -6,6 +6,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.hibernate.validator.constraints.NotBlank;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+
+//this class functions as a login
+//the endpoint can consume this as xml or json
+//parse the request into an object and use the client to send the info for validation
+
 @XmlRootElement
 public class LoginObject {
 

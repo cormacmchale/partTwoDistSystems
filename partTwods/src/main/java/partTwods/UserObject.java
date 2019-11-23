@@ -5,6 +5,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.xml.bind.annotation.*;
 import com.google.protobuf.ByteString;
 
+//this class functions as a place to parse the body of the http requests to add a user
+//the first constructor takes in the body for add user
+//the second constructor is called to save the hashed password and salt along with the user info to put into the hashMap
+//annotations provide functionality for parsing from xml and json and returning as such
+
 @XmlRootElement
 public class UserObject {
 	
@@ -18,7 +23,7 @@ public class UserObject {
 		this.email = e;
 		this.password = p;
 	}
-	//second object for storing and returning
+	//second object for storing hash, salt and saving to the hashMap
 	public UserObject(int id, String uN ,String e, String p, ByteString h, ByteString s)
 	{
 		this.userId = id;

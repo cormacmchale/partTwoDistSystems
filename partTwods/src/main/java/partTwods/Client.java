@@ -1,7 +1,6 @@
 package partTwods;
 
 import java.util.concurrent.TimeUnit;
-//import java.util.logging.Logger;
 import com.google.protobuf.BoolValue;
 import com.google.protobuf.ByteString;
 import ie.gmit.ds.HashRequest;
@@ -18,11 +17,12 @@ public class Client {
 	//initialize applicable fields
     //private static final Logger logger = Logger.getLogger(Client.class.getName());  
     private final ManagedChannel channel;
+    //password service grpc stuff now generated properly
+    //part 1 removed as a dependency
     private final PasswordServiceGrpc.PasswordServiceStub asyncPasswordService;
     private final PasswordServiceGrpc.PasswordServiceBlockingStub syncPasswordService;
 
-    public Client(String host, int port) {
-    	
+    public Client(String host, int port) {  	
         channel = ManagedChannelBuilder
         		.forAddress(host, port)
                 .usePlaintext()
@@ -36,8 +36,8 @@ public class Client {
     }
     
     //method for making the request for a hashed password with salt
-    //we should send a message (hashrequest in this) and wait on a message back (hash response)
-    //add the functionality to ask for a request in console window
+    //we should send a message (hash request in this) and wait on a message back (hash response)
+    //this is called asynchronously
     public void requestAHash(UserObject newUser)
     {
     	StreamObserver<HashResponse> responseObserver = new StreamObserver<HashResponse>()
@@ -49,8 +49,9 @@ public class Client {
 					}
 					@Override
 					public void onError(Throwable t) {
-						// TODO Auto-generated method stub	
+						System.out.println("No connection");	
 					}
+					//the responseObserver will enter here with the password and hash when the service sends it back
 					@Override
 					public void onNext(HashResponse passwordAndHash) {
 						//add to the database here
@@ -60,7 +61,7 @@ public class Client {
 						d.addUser(user);
 					}
     			};
-    		try 
+    		try //pass the message and wait for onNext()
     		{
     			asyncPasswordService.hash(HashRequest.newBuilder()
         	    			                   .setUserId(newUser.getUserId())
@@ -70,23 +71,29 @@ public class Client {
         	catch (StatusRuntimeException ex)
     		{
     		    //not working for the moment
-        		System.out.println("here");     		
+        		//System.out.println("here");     		
     		}   
     	}   
     
     //async method to check password here
+    //returns a boolean answer to the validation request
     public boolean syncPasswordValidation(LoginObject login, ByteString hp, ByteString s)
     {
+    	//build the message
     	ValidatorRequest request = ValidatorRequest.newBuilder().setPassword(login.getPassword()).setHashedPassword(hp).setSalt(s).build();
+    	//placeholder for reply
     	BoolValue result = BoolValue.newBuilder().getDefaultInstanceForType();
     	try
     	 {
+    		 //wait synchronously for the validation result,program and postman will wait here for the result
     		 result = syncPasswordService.validate(request); 
     		 System.out.println(result);
+    		 //return true/false back to the endpoint method
     		 return result.getValue();
     	 }
          catch (StatusRuntimeException ex) 
      	 {
+           //any problems alert user and return false
  	       System.out.println(ex.getLocalizedMessage());
  	       return false;
          }  	

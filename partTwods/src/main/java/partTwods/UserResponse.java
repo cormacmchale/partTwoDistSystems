@@ -2,8 +2,9 @@ package partTwods;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+//small class for sending back a response in an appropriate format
 
 @XmlRootElement
 public class UserResponse {
@@ -21,6 +22,10 @@ public class UserResponse {
 	public String getMessage() 
 	{
 		return message;
+	}
+	//in case it's ever need for xml
+	public void setMessage(String message) {
+		this.message = message;
 	}
 
 }
